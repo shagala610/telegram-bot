@@ -14,7 +14,7 @@ scopes = [
 credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
 client = gspread.authorize(credentials)
 
-sheet = client.open_by_key("Bot база").sheet1
+sheet = client.open_by_key("12nY7zYTpgBtdGPIjNo75OdY9iCid4ixEYwyuaKZWKVM").sheet1
 
 TOKEN = "8290405338:AAF2jD1Ja1dsfpbMCYCybEMEnyVKw-KamxA"
 bot = telebot.TeleBot(TOKEN)
