@@ -20,7 +20,7 @@ sh = client.open_by_key(SPREADSHEET_ID)
 
 users_sheet = sh.sheet1
 conspect_sheet = sh.worksheet("9_conspect")
-terms_sheet = sh.worksheet("terms")
+terms_sheet = sh.worksheet("9_termins")
 
 TOKEN = "8290405338:AAF2jD1Ja1dsfpbMCYCybEMEnyVKw-KamxA"
 bot = telebot.TeleBot(TOKEN)
