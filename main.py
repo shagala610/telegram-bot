@@ -19,13 +19,8 @@ users_sheet = client.open_by_key(
     "12nY7zYTpgBtdGPIjNo75OdY9iCid4ixEYwyuaKZWKVM"
 ).sheet1
 
-conspect_sheet = client.open_by_key(
-    "12nY7zYTpgBtdGPIjNo75OdY9iCid4ixEYwyuaKZWKVM"
-).worksheet("9_Конспект")
-
-terms_sheet = client.open_by_key(
-    "12nY7zYTpgBtdGPIjNo75OdY9iCid4ixEYwyuaKZWKVM"
-).worksheet("9_Термины")
+conspect_sheet = client.open_by_key(12nY7zYTpgBtdGPIjNo75OdY9iCid4ixEYwyuaKZWKVM).worksheet("9_conspect")
+terms_sheet = client.open_by_key(12nY7zYTpgBtdGPIjNo75OdY9iCid4ixEYwyuaKZWKVM).worksheet("9_termins")
 
 TOKEN = "8290405338:AAF2jD1Ja1dsfpbMCYCybEMEnyVKw-KamxA"
 bot = telebot.TeleBot(TOKEN)
