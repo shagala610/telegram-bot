@@ -14,17 +14,15 @@ scopes = [
 ]
 credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
 client = gspread.authorize(credentials)
-sh = client.open_by_key("12n7zYTpgBtdGPIjNo75OdY9iCid4ixEYwyaKZWkVM")
-print([ws.title for ws in sh.worksheets()])
+
 users_sheet = client.open_by_key(
     "12nY7zYTpgBtdGPIjNo75OdY9iCid4ixEYwyuaKZWKVM"
 ).sheet1
-
-conspect_sheet = client.open_by_key(
-    "12n7zYTpgBtdGPIjNo75OdY9iCid4ixEYwyaKZWkVM"
+conspect_sheet = client.open(
+    "9_conspect"
 ).worksheet("9_conspect")
 terms_sheet = client.open_by_key(
-    "12n7zYTpgBtdGPIjNo75OdY9iCid4ixEYwyaKZWkVM"
+    "9_termins"
 ).worksheet("terms")
 TOKEN = "8290405338:AAF2jD1Ja1dsfpbMCYCybEMEnyVKw-KamxA"
 bot = telebot.TeleBot(TOKEN)
