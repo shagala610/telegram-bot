@@ -14,7 +14,8 @@ scopes = [
 ]
 credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
 client = gspread.authorize(credentials)
-
+sh = client.open_by_key("12n7zYTpgBtdGPIjNo75OdY9iCid4ixEYwyaKZWkVM")
+print([ws.title for ws in sh.worksheets()])
 users_sheet = client.open_by_key(
     "12nY7zYTpgBtdGPIjNo75OdY9iCid4ixEYwyuaKZWKVM"
 ).sheet1
