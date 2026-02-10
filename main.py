@@ -22,8 +22,9 @@ users_sheet = client.open_by_key(
 conspect_sheet = client.open_by_key(
     "12n7zYTpgBtdGPIjNo75OdY9iCid4ixEYwyaKZWkVM"
 ).worksheet("9_conspect")
-terms_sheet = client.open_by_key(12nY7zYTpgBtdGPIjNo75OdY9iCid4ixEYwyuaKZWKVM).worksheet("9_termins")
-
+terms_sheet = client.open_by_key(
+    "12n7zYTpgBtdGPIjNo75OdY9iCid4ixEYwyaKZWkVM"
+).worksheet("terms")
 TOKEN = "8290405338:AAF2jD1Ja1dsfpbMCYCybEMEnyVKw-KamxA"
 bot = telebot.TeleBot(TOKEN)
 
