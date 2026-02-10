@@ -18,7 +18,7 @@ scopes = [
 credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
 client = gspread.authorize(credentials)
 
-sheet = client.open("Бот база").sheet1
+sheet = client.open("12nY7zYTpgBtdGPIjNo75OdY9iCid4ixEYwyuaKZWKVM").sheet1
 
 
 @bot.message_handler(commands=['start'])
