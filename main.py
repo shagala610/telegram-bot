@@ -28,143 +28,68 @@ bot = telebot.TeleBot(TOKEN)
 authorized_users = set()
 user_state = {}
 
-AVAILABLE_CLASSES = ["9 класс"]
-
-# ===== ПОИСК ПОЛЬЗОВАТЕЛЯ ПО ТЕЛЕФОНУ =====
-def find_user_by_phone(phone):
-    records = users_sheet.get_all_records()
-    for row in records:
-        if str(row["phone"]) == phone:
-            return row["name"]
-    return None
-
-
-# ===== КЛАВИАТУРА ВЫБОРА КЛАССА =====
-@bot.message_handler(func=lambda message: message.text.endswith("класс"))
+@bot.message_handler(func=lambda m: m.text.endswith("класс"))
 def choose_class(message):
     chat_id = message.chat.id
     text = message.text
 
     if chat_id not in authorized_users:
-        bot.send_message(chat_id, "Сначала введите номер телефона.")
+        bot.send_message(chat_id, "Алдымен телефон нөмірін енгізіңіз.")
         return
 
     if text not in AVAILABLE_CLASSES:
         bot.send_message(
             chat_id,
-            f"📘 Материалы для {text} пока в разработке.\n"
-            "Доступен только 9 класс."
+            f"📘 {text} үшін материалдар әзірге дайын емес."
         )
         return
 
+    user_state[chat_id] = {"class": "9"}
+
+    # бөлімдер
+    sections = list(set(conspect_sheet.col_values(2)[1:]))
+
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    for sec in sections:
+        markup.add(sec)
+    markup.add("⬅️ Назад")
+
     bot.send_message(
         chat_id,
-        "📚 9 класс. Выберите раздел:",
-        reply_markup=section_keyboard()
+        "📚 9 класс. Бөлімді таңдаңыз:",
+        reply_markup=markup
     )
-
-
-# ===== КЛАВИАТУРА 9 КЛАССА =====
-def nine_class_keyboard():
-    kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    kb.add("Клеточная биология")
-    kb.add("Многообразие живых организмов")
-    kb.add("Влияние деятельности человека")
-    kb.add("Питание", "Транспорт веществ")
-    kb.add("Дыхание", "Выделение")
-    kb.add("Координация и регуляция")
-    kb.add("Движение")
-    kb.add("Молекулярная биология")
-    kb.add("Клеточный цикл")
-    kb.add("Наследственность и изменчивость")
-    kb.add("Рост и развитие")
-    kb.add("Размножение")
-    kb.add("Эволюция")
-    kb.add("⬅️ Назад")
-    return kb
-
-
-# ===== ПОЛУЧЕНИЕ КОНТЕНТА ИЗ SHEET =====
-def get_content(sheet, section_name):
-    rows = sheet.get_all_records()
-    for row in rows:
-        if row["section"] == section_name:
-            return row["content"]
-    return "📘 Материал пока не добавлен."
-
-
-# ===== START =====
-@bot.message_handler(commands=["start"])
-def start(message):
-    bot.send_message(
-        message.chat.id,
-        "📱 Введите номер телефона (без +):\nПример: 87475620186",
-        reply_markup=types.ReplyKeyboardRemove()
-    )
-
-
-# ===== ОСНОВНОЙ HANDLER =====
-@bot.message_handler(func=lambda message: message.text.isdigit())
-def check_user(message):
+    @bot.message_handler(func=lambda m: m.text in conspect_sheet.col_values(2))
+def choose_section(message):
     chat_id = message.chat.id
-    phone = message.text.strip()
+    section = message.text
 
-    name = find_user_by_phone(phone)
-    if not name:
-        bot.send_message(
-            chat_id,
-            "❌ Сіздің нөміріңіз базаға тіркелмеген.\n"
-            "Әкімшіге хабарласыңыз:\n+77745620186"
-        )
-        return
+    user_state[chat_id]["section"] = section
 
-    authorized_users.add(chat_id)
-    user_state[chat_id] = {}
+    records = conspect_sheet.get_all_records()
+    conspects = [
+        r["section"] for r in records
+        if r["section"] == section
+    ]
+
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.add("📄 Конспект")
+    markup.add("⬅️ Назад")
 
     bot.send_message(
         chat_id,
-        f"Привет, {name} 👋\nВыберите класс:",
-        reply_markup=class_keyboard()
+        f"📘 {section}\nКонспектті таңдаңыз:",
+        reply_markup=markup
     )
-    # --- ВЫБОР КЛАССА ---
-    if text.endswith("класс"):
-        if text not in AVAILABLE_CLASSES:
-            bot.send_message(
-                chat_id,
-                f"📘 Материалы для {text} пока в разработке.\n"
-                "В данный момент доступен только 9 класс.",
-                reply_markup=class_keyboard()
-            )
-            return
+    @bot.message_handler(func=lambda m: m.text == "📄 Конспект")
+def show_conspect(message):
+    chat_id = message.chat.id
+    section = user_state[chat_id]["section"]
 
-        user_state[chat_id]["class"] = "9 класс"
-
-        bot.send_message(
-            chat_id,
-            "📘 9 класс. Выберите раздел:",
-            reply_markup=nine_class_keyboard()
-        )
-        return
-
-    # --- НАЗАД ---
-    if text == "⬅️ Назад":
-        bot.send_message(
-            chat_id,
-            "Выберите класс:",
-            reply_markup=class_keyboard()
-        )
-        return
-
-    # --- РАЗДЕЛЫ 9 КЛАССА ---
-    if user_state.get(chat_id, {}).get("class") == "9 класс":
-        content = get_content(conspect_sheet, text)
-        bot.send_message(chat_id, content)
-        return
-
-    # --- НА ВСЯКИЙ СЛУЧАЙ ---
-    bot.send_message(
-        chat_id,
-        "Пожалуйста, выберите вариант кнопками 👇"
-    )
-
+    records = conspect_sheet.get_all_records()
+    for r in records:
+        if r["section"] == section:
+            bot.send_message(chat_id, r["content"])
+            break
+            
 bot.infinity_polling()
