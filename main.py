@@ -28,6 +28,9 @@ bot = telebot.TeleBot(TOKEN)
 authorized_users = set()
 user_state = {}
 
+AVAILABLE_CLASSES = ["9 класс"]
+
+# ===== ПОИСК ПОЛЬЗОВАТЕЛЯ ПО ТЕЛЕФОНУ =====
 def find_user_by_phone(phone):
     records = users_sheet.get_all_records()
     for row in records:
@@ -35,12 +38,16 @@ def find_user_by_phone(phone):
             return row["name"]
     return None
 
+
+# ===== КЛАВИАТУРА ВЫБОРА КЛАССА =====
 def class_keyboard():
     kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
     kb.add("7 класс", "8 класс", "9 класс")
     kb.add("10 класс", "11 класс")
     return kb
 
+
+# ===== КЛАВИАТУРА 9 КЛАССА =====
 def nine_class_keyboard():
     kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
     kb.add("Клеточная биология")
@@ -59,19 +66,17 @@ def nine_class_keyboard():
     kb.add("⬅️ Назад")
     return kb
 
-def section_keyboard():
-    kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    kb.add("📘 Конспект", "📚 Термины")
-    kb.add("⬅️ Назад")
-    return kb
 
+# ===== ПОЛУЧЕНИЕ КОНТЕНТА ИЗ SHEET =====
 def get_content(sheet, section_name):
     rows = sheet.get_all_records()
     for row in rows:
         if row["section"] == section_name:
             return row["content"]
-    return "Материал пока не добавлен."
+    return "📘 Материал пока не добавлен."
 
+
+# ===== START =====
 @bot.message_handler(commands=["start"])
 def start(message):
     bot.send_message(
@@ -80,16 +85,20 @@ def start(message):
         reply_markup=types.ReplyKeyboardRemove()
     )
 
+
+# ===== ОСНОВНОЙ HANDLER =====
 @bot.message_handler(func=lambda message: True)
 def main_handler(message):
     chat_id = message.chat.id
     text = message.text.strip()
 
+    # --- АВТОРИЗАЦИЯ ---
     if chat_id not in authorized_users:
         name = find_user_by_phone(text)
         if name:
             authorized_users.add(chat_id)
             user_state[chat_id] = {}
+
             bot.send_message(
                 chat_id,
                 f"Привет, {name} 👋\nВыберите класс:",
@@ -98,12 +107,24 @@ def main_handler(message):
         else:
             bot.send_message(
                 chat_id,
-                "❌ Ваш номер отсутствует в базе.\nОбратитесь к администратору:\n+77745620186"
+                "❌ Ваш номер отсутствует в базе.\n"
+                "Обратитесь к администратору:\n+77745620186"
             )
         return
 
-    if text == "9 класс":
-        user_state[chat_id]["class"] = 9
+    # --- ВЫБОР КЛАССА ---
+    if text.endswith("класс"):
+        if text not in AVAILABLE_CLASSES:
+            bot.send_message(
+                chat_id,
+                f"📘 Материалы для {text} пока в разработке.\n"
+                "В данный момент доступен только 9 класс.",
+                reply_markup=class_keyboard()
+            )
+            return
+
+        user_state[chat_id]["class"] = "9 класс"
+
         bot.send_message(
             chat_id,
             "📘 9 класс. Выберите раздел:",
@@ -111,61 +132,25 @@ def main_handler(message):
         )
         return
 
+    # --- НАЗАД ---
     if text == "⬅️ Назад":
-        if "section" in user_state.get(chat_id, {}):
-            user_state[chat_id].pop("section", None)
-            bot.send_message(
-                chat_id,
-                "📘 Выберите раздел:",
-                reply_markup=nine_class_keyboard()
-            )
-        else:
-            bot.send_message(
-                chat_id,
-                "Выберите класс:",
-                reply_markup=class_keyboard()
-            )
-        return
-
-    sections = [
-        "Клеточная биология",
-        "Многообразие живых организмов",
-        "Влияние деятельности человека",
-        "Питание",
-        "Транспорт веществ",
-        "Дыхание",
-        "Выделение",
-        "Координация и регуляция",
-        "Движение",
-        "Молекулярная биология",
-        "Клеточный цикл",
-        "Наследственность и изменчивость",
-        "Рост и развитие",
-        "Размножение",
-        "Эволюция"
-    ]
-
-    if text in sections:
-        user_state[chat_id]["section"] = text
         bot.send_message(
             chat_id,
-            f"Раздел: {text}\nВыберите формат:",
-            reply_markup=section_keyboard()
+            "Выберите класс:",
+            reply_markup=class_keyboard()
         )
         return
 
-    if text == "📘 Конспект":
-        section = user_state[chat_id].get("section")
-        content = get_content(conspect_sheet, section)
+    # --- РАЗДЕЛЫ 9 КЛАССА ---
+    if user_state.get(chat_id, {}).get("class") == "9 класс":
+        content = get_content(conspect_sheet, text)
         bot.send_message(chat_id, content)
         return
 
-    if text == "📚 Термины":
-        section = user_state[chat_id].get("section")
-        content = get_content(terms_sheet, section)
-        bot.send_message(chat_id, content)
-        return
-
-    bot.send_message(chat_id, "Выберите вариант кнопками 👇")
+    # --- НА ВСЯКИЙ СЛУЧАЙ ---
+    bot.send_message(
+        chat_id,
+        "Пожалуйста, выберите вариант кнопками 👇"
+    )
 
 bot.infinity_polling()
