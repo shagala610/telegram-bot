@@ -40,11 +40,28 @@ def find_user_by_phone(phone):
 
 
 # ===== КЛАВИАТУРА ВЫБОРА КЛАССА =====
-def class_keyboard():
-    kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    kb.add("7 класс", "8 класс", "9 класс")
-    kb.add("10 класс", "11 класс")
-    return kb
+@bot.message_handler(func=lambda message: message.text.endswith("класс"))
+def choose_class(message):
+    chat_id = message.chat.id
+    text = message.text
+
+    if chat_id not in authorized_users:
+        bot.send_message(chat_id, "Сначала введите номер телефона.")
+        return
+
+    if text not in AVAILABLE_CLASSES:
+        bot.send_message(
+            chat_id,
+            f"📘 Материалы для {text} пока в разработке.\n"
+            "Доступен только 9 класс."
+        )
+        return
+
+    bot.send_message(
+        chat_id,
+        "📚 9 класс. Выберите раздел:",
+        reply_markup=section_keyboard()
+    )
 
 
 # ===== КЛАВИАТУРА 9 КЛАССА =====
