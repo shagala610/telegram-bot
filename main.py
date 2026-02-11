@@ -87,31 +87,28 @@ def start(message):
 
 
 # ===== ОСНОВНОЙ HANDLER =====
-@bot.message_handler(func=lambda message: True)
-def main_handler(message):
+@bot.message_handler(func=lambda message: message.text.isdigit())
+def check_user(message):
     chat_id = message.chat.id
-    text = message.text.strip()
+    phone = message.text.strip()
 
-    # --- АВТОРИЗАЦИЯ ---
-    if chat_id not in authorized_users:
-        name = find_user_by_phone(text)
-        if name:
-            authorized_users.add(chat_id)
-            user_state[chat_id] = {}
-
-            bot.send_message(
-                chat_id,
-                f"Привет, {name} 👋\nВыберите класс:",
-                reply_markup=class_keyboard()
-            )
-        else:
-            bot.send_message(
-                chat_id,
-                "❌ Ваш номер отсутствует в базе.\n"
-                "Обратитесь к администратору:\n+77745620186"
-            )
+    name = find_user_by_phone(phone)
+    if not name:
+        bot.send_message(
+            chat_id,
+            "❌ Сіздің нөміріңіз базаға тіркелмеген.\n"
+            "Әкімшіге хабарласыңыз:\n+77745620186"
+        )
         return
 
+    authorized_users.add(chat_id)
+    user_state[chat_id] = {}
+
+    bot.send_message(
+        chat_id,
+        f"Привет, {name} 👋\nВыберите класс:",
+        reply_markup=class_keyboard()
+    )
     # --- ВЫБОР КЛАССА ---
     if text.endswith("класс"):
         if text not in AVAILABLE_CLASSES:
